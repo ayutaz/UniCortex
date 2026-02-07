@@ -337,6 +337,35 @@ namespace UniCortex
             isBuilt = true;
         }
 
+        // --- 永続化用内部アクセッサ (IndexSerializer から使用) ---
+
+        /// <summary>内部 VectorStorage を返す。</summary>
+        internal VectorStorage GetVectorStorage() => vectorStorage;
+
+        /// <summary>内部 HnswGraph を返す。</summary>
+        internal HnswGraph GetHnswGraph() => hnswGraph;
+
+        /// <summary>内部 HnswGraph の参照を返す (復元用)。</summary>
+        internal ref HnswGraph GetHnswGraphRef() => ref hnswGraph;
+
+        /// <summary>内部 SparseIndex を返す。</summary>
+        internal SparseIndex GetSparseIndex() => sparseIndex;
+
+        /// <summary>内部 SparseIndex の参照を返す (復元用)。</summary>
+        internal ref SparseIndex GetSparseIndexRef() => ref sparseIndex;
+
+        /// <summary>内部 BM25Index を返す。</summary>
+        internal BM25Index GetBm25Index() => bm25Index;
+
+        /// <summary>内部 BM25Index の参照を返す (復元用)。</summary>
+        internal ref BM25Index GetBm25IndexRef() => ref bm25Index;
+
+        /// <summary>内部 IdMap を返す。</summary>
+        internal IdMap GetIdMap() => idMap;
+
+        /// <summary>内部 IdMap の参照を返す (復元用)。</summary>
+        internal ref IdMap GetIdMapRef() => ref idMap;
+
         /// <summary>
         /// 全リソースを解放する。
         /// </summary>
