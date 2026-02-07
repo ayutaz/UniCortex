@@ -60,8 +60,15 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-# uLoopMCP output
+# uLoopMCP
 .uloop/
+.mcp.json
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Unity package lock (auto-generated)
+Packages/packages-lock.json
 
 # Packed Addressables
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
