@@ -3,7 +3,18 @@
     "allow": [
       "Bash(git status:*)",
       "Bash(del:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(gh repo view:*)",
+      "Bash(node --version:*)",
+      "Bash(npm install:*)",
+      "Bash(uloop:*)"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowLocalBinding": true
+    }
   }
 }
