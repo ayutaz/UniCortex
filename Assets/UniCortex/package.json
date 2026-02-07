@@ -1,0 +1,27 @@
+{
+  "name": "com.unicortex.runtime",
+  "version": "0.1.0",
+  "displayName": "UniCortex",
+  "description": "Unity on-device unified search engine: Dense (HNSW) + Sparse + BM25 + Hybrid (RRF) with Burst/Jobs optimization.",
+  "unity": "6000.0",
+  "unityRelease": "0f1",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "",
+  "keywords": [
+    "search",
+    "vector",
+    "hnsw",
+    "bm25",
+    "hybrid",
+    "burst"
+  ],
+  "author": {
+    "name": "UniCortex"
+  },
+  "dependencies": {
+    "com.unity.burst": "1.8.0",
+    "com.unity.collections": "2.1.0",
+    "com.unity.mathematics": "1.3.0"
+  }
+}
