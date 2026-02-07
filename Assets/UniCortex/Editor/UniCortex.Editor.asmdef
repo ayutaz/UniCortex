@@ -1,0 +1,18 @@
+{
+    "name": "UniCortex.Editor",
+    "rootNamespace": "UniCortex.Editor",
+    "references": [
+        "UniCortex.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
