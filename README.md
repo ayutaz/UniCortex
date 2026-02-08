@@ -109,60 +109,102 @@ db.Dispose();
 ### BM25 全文検索
 
 ```csharp
-// トークナイズしてから検索
-var text = new NativeArray<byte>(System.Text.Encoding.UTF8.GetBytes("search query"), Allocator.Temp);
-var tokenHashes = new NativeList<uint>(Allocator.Temp);
-Tokenizer.Tokenize(ref text, ref tokenHashes);
+// テキストを UTF-8 バイト配列として渡す (内部でトークナイズ)
+var textBytes = System.Text.Encoding.UTF8.GetBytes("search query");
+var text = new NativeArray<byte>(textBytes, Allocator.Temp);
 
-var results = db.SearchBM25(tokenHashes, new SearchParams { K = 10 });
-tokenHashes.Dispose();
+var results = db.SearchBM25(text, 10);
 text.Dispose();
+
+// 結果を処理
+for (int i = 0; i < results.Length; i++)
+    UnityEngine.Debug.Log($"Score: {results[i].Score}");
+
+results.Dispose();
 ```
 
 ### ハイブリッド検索
 
 ```csharp
+using UniCortex.Hybrid;
+
 var param = new HybridSearchParams
 {
     DenseQuery = denseQueryVector,
     SparseQuery = sparseQueryVector,
-    Bm25Query = tokenHashes,
+    TextQuery = textQueryBytes,  // UTF-8 byte array
     K = 10,
-    RrfK = 60,
+    SubSearchK = 20,
+    RrfConfig = RrfConfig.Default,
+    DenseParams = new SearchParams { K = 20, EfSearch = 50, DistanceType = DistanceType.Cosine },
 };
-var (results, error) = db.SearchHybrid(param);
+var result = db.SearchHybrid(param);
+if (result.IsSuccess)
+{
+    var results = result.Value;
+    // 結果を処理...
+    results.Dispose();
+}
 ```
 
 ### メタデータフィルタ
 
 ```csharp
-// メタデータを設定
-db.SetMetadata(1, MetadataStorage.MakeKey(0, MetadataFieldType.Int), 100);
+using UniCortex.Filter;
 
-// フィルタ付き検索
-var filter = new FilterExpression
+// メタデータを設定
+db.SetMetadataInt(docId: 1, fieldHash: 100, value: 1500);  // Price
+db.SetMetadataFloat(docId: 1, fieldHash: 102, value: 3.2f); // Weight
+db.SetMetadataBool(docId: 1, fieldHash: 103, value: true);  // IsEquipable
+
+// 検索結果に対してメタデータでポストフィルタリング
+var results = db.SearchDense(query, new SearchParams { K = 20, EfSearch = 100 });
+for (int i = 0; i < results.Length; i++)
 {
-    Conditions = new NativeArray<FilterCondition>(1, Allocator.Temp)
+    var extId = db.GetExternalId(results[i].InternalId);
+    if (!extId.IsSuccess) continue;
+    var price = db.GetMetadataInt(extId.Value, 100);
+    if (price.IsSuccess && price.Value >= 1000)
     {
-        [0] = new FilterCondition
-        {
-            FieldKey = MetadataStorage.MakeKey(0, MetadataFieldType.Int),
-            Op = FilterOp.GreaterEqual,
-            IntValue = 50
-        }
+        // フィルタ通過
     }
-};
+}
+results.Dispose();
 ```
 
 ### 永続化 (Save/Load)
 
 ```csharp
+using UniCortex.Persistence;
+
 // 保存
-IndexSerializer.Save(db, "path/to/index.bin");
+var saveResult = IndexSerializer.Save("path/to/index.ucx", db);
+if (saveResult.IsSuccess) Debug.Log("Saved!");
 
 // 読み込み
-var loadedDb = IndexSerializer.Load("path/to/index.bin", Allocator.Persistent);
+var loadResult = IndexSerializer.Load("path/to/index.ucx");
+if (loadResult.IsSuccess)
+{
+    var loadedDb = loadResult.Value;
+    // loadedDb は Build() 済み状態で復元される
+    loadedDb.Dispose(); // 使い終わったら Dispose
+}
 ```
+
+## サンプルシーン
+
+6つのインタラクティブなデモシーンが含まれています。Package Manager の Samples タブからインポートできます。
+
+| シーン | 説明 |
+|---|---|
+| **01_DenseSearch** | HNSW ベクトル類似度検索 (プリセットクエリ + パラメータ調整) |
+| **02_BM25Search** | BM25 全文検索 (テキスト入力 + プリセット) |
+| **03_SparseSearch** | スパースベクトル検索 (キーワード + 重み) |
+| **04_HybridSearch** | RRF ハイブリッド検索 (Dense + Sparse + BM25 統合) |
+| **05_FilterDemo** | メタデータフィルタリング (価格・レアリティ・装備可否) |
+| **06_Persistence** | Save/Load ワークフロー (ステップバイステップ) |
+
+各デモは RPG アイテムデータベース (20件) を使用し、コード生成 UGUI でプレハブ不要です。
 
 ## 距離関数
 
@@ -305,6 +347,21 @@ results.Dispose();
 query.Dispose();
 db.Dispose();
 ```
+
+### Sample Scenes
+
+Six interactive demo scenes are included. Import them from the Samples tab in Package Manager.
+
+| Scene | Description |
+|---|---|
+| **01_DenseSearch** | HNSW vector similarity search with preset queries |
+| **02_BM25Search** | BM25 full-text search with text input |
+| **03_SparseSearch** | Sparse vector search with keyword + weight pairs |
+| **04_HybridSearch** | RRF hybrid search combining Dense + Sparse + BM25 |
+| **05_FilterDemo** | Metadata filtering (price, rarity, equipable) |
+| **06_Persistence** | Step-by-step Save/Load workflow |
+
+Each demo uses an RPG item database (20 items) with code-generated UGUI (no prefab dependencies).
 
 ### Distance Functions
 

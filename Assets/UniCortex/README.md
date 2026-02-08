@@ -86,6 +86,19 @@ db.Dispose();
 
 Configure via `DatabaseConfig.DistanceType`.
 
+## Sample Scenes
+
+Six interactive demo scenes are included. Import them from the Samples tab in Package Manager.
+
+| Scene | Description |
+|---|---|
+| **01_DenseSearch** | HNSW vector similarity search with preset queries |
+| **02_BM25Search** | BM25 full-text search with text input |
+| **03_SparseSearch** | Sparse vector search with keyword + weight pairs |
+| **04_HybridSearch** | RRF hybrid search combining Dense + Sparse + BM25 |
+| **05_FilterDemo** | Metadata filtering (price, rarity, equipable) |
+| **06_Persistence** | Step-by-step Save/Load workflow |
+
 ## Architecture
 
 ```
