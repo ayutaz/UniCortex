@@ -172,21 +172,19 @@ namespace UniCortex.FullText
 
         /// <summary>
         /// ASCII ワードを小文字化してハッシュ計算する。
+        /// インライン FNV-1a で Temp バッファ確保を回避。
         /// </summary>
         static uint HashAsciiWord(NativeArray<byte> data, int start, int length)
         {
-            // 小文字化した一時バッファ
-            var lower = new NativeArray<byte>(length, Allocator.Temp);
+            uint hash = 2166136261u; // FNV offset basis
             for (int i = 0; i < length; i++)
             {
                 byte b = data[start + i];
                 if (b >= (byte)'A' && b <= (byte)'Z')
-                    lower[i] = (byte)(b + 32);
-                else
-                    lower[i] = b;
+                    b = (byte)(b + 32);
+                hash ^= b;
+                hash *= 16777619u; // FNV prime
             }
-            uint hash = TokenHash.Hash(lower, 0, length);
-            lower.Dispose();
             return hash;
         }
 

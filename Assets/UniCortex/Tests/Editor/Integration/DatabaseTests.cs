@@ -106,6 +106,7 @@ namespace UniCortex.Tests.Editor.Integration
             db.Add(2, denseVector: vec2);
 
             db.Delete(1);
+            db.Build();
 
             var query = MakeVector(1, 0, 0, 0);
             var results = db.SearchDense(query, new SearchParams { K = 10, EfSearch = 50 });
@@ -137,6 +138,7 @@ namespace UniCortex.Tests.Editor.Integration
             db.Add(1, text: text1);
             db.Add(2, text: text2);
             db.Add(3, text: text3);
+            db.Build();
 
             var queryText = MakeText("fire legendary");
             var results = db.SearchBM25(queryText, 3);
@@ -164,6 +166,7 @@ namespace UniCortex.Tests.Editor.Integration
             db.Add(1, sparseVector: sv1);
             db.Add(2, sparseVector: sv2);
             db.Add(3, sparseVector: sv3);
+            db.Build();
 
             var query = MakeSparse((0, 1.0f));
             var results = db.SearchSparse(query, 3);
@@ -197,6 +200,7 @@ namespace UniCortex.Tests.Editor.Integration
             db.Add(1, denseVector: vec1, text: text1);
             db.Add(2, denseVector: vec2, text: text2);
             db.Add(3, denseVector: vec3, text: text3);
+            db.Build();
 
             var denseQuery = MakeVector(1, 0, 0, 0);
             var textQuery = MakeText("fire");
@@ -256,6 +260,7 @@ namespace UniCortex.Tests.Editor.Integration
             Assert.IsTrue(updateResult.IsSuccess);
 
             // 更新後のベクトルで検索
+            db.Build();
             var query = MakeVector(0, 0, 0, 1);
             var results = db.SearchDense(query, new SearchParams { K = 1, EfSearch = 50 });
 
@@ -275,6 +280,7 @@ namespace UniCortex.Tests.Editor.Integration
         public void EmptyDatabase_SearchReturnsEmpty()
         {
             var db = new UniCortexDatabase(config);
+            db.Build();
 
             var query = MakeVector(1, 0, 0, 0);
             var results = db.SearchDense(query, new SearchParams { K = 5, EfSearch = 50 });

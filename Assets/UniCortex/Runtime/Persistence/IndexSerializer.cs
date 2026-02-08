@@ -57,6 +57,10 @@ namespace UniCortex.Persistence
                     WriteIdMap(writer, db);
                     long idMapSize = ms.Position - idMapOffset;
 
+                    long metadataOffset = ms.Position;
+                    WriteMetadata(writer, db);
+                    long metadataSize = ms.Position - metadataOffset;
+
                     // CRC32 計算
                     writer.Flush();
                     var allData = ms.ToArray();
@@ -80,6 +84,8 @@ namespace UniCortex.Persistence
                     headerWriter.Write(bm25Size);
                     headerWriter.Write(idMapOffset);
                     headerWriter.Write(idMapSize);
+                    headerWriter.Write(metadataOffset);
+                    headerWriter.Write(metadataSize);
                     headerWriter.Write(checksum);
 
                     headerWriter.Flush();
@@ -142,6 +148,8 @@ namespace UniCortex.Persistence
                     long bm25Size = reader.ReadInt64();
                     long idMapOffset = reader.ReadInt64();
                     long idMapSize = reader.ReadInt64();
+                    long metadataOffset = reader.ReadInt64();
+                    long metadataSize = reader.ReadInt64();
                     uint checksum = reader.ReadUInt32();
 
                     // CRC32 検証
@@ -178,6 +186,10 @@ namespace UniCortex.Persistence
                     ms.Seek(idMapOffset, SeekOrigin.Begin);
                     ReadIdMap(reader, db);
 
+                    ms.Seek(metadataOffset, SeekOrigin.Begin);
+                    ReadMetadata(reader, db);
+
+                    db.SetBuilt(true);
                     return new LoadResult { Value = db };
                 }
             }
@@ -242,35 +254,43 @@ namespace UniCortex.Persistence
 
             // 転置インデックスを flat に書き出し
             var keys = idx.InvertedIndex.GetKeyArray(Allocator.Temp);
-            w.Write(keys.Length);
-            for (int k = 0; k < keys.Length; k++)
+            try
             {
-                int dimKey = keys[k];
-                // このキーの全ポスティングを書き出し
-                var postings = new NativeList<SparsePosting>(16, Allocator.Temp);
-                if (idx.InvertedIndex.TryGetFirstValue(dimKey, out SparsePosting posting, out var iter))
+                w.Write(keys.Length);
+                for (int k = 0; k < keys.Length; k++)
                 {
-                    do { postings.Add(posting); }
-                    while (idx.InvertedIndex.TryGetNextValue(out posting, ref iter));
-                }
+                    int dimKey = keys[k];
+                    var postings = new NativeList<SparsePosting>(16, Allocator.Temp);
+                    try
+                    {
+                        if (idx.InvertedIndex.TryGetFirstValue(dimKey, out SparsePosting posting, out var iter))
+                        {
+                            do { postings.Add(posting); }
+                            while (idx.InvertedIndex.TryGetNextValue(out posting, ref iter));
+                        }
 
-                w.Write(dimKey);
-                w.Write(postings.Length);
-                for (int p = 0; p < postings.Length; p++)
-                {
-                    w.Write(postings[p].InternalId);
-                    w.Write(postings[p].Value);
+                        w.Write(dimKey);
+                        w.Write(postings.Length);
+                        for (int p = 0; p < postings.Length; p++)
+                        {
+                            w.Write(postings[p].InternalId);
+                            w.Write(postings[p].Value);
+                        }
+                    }
+                    finally { postings.Dispose(); }
                 }
-                postings.Dispose();
             }
-            keys.Dispose();
+            finally { keys.Dispose(); }
 
             // DeletedIds
             var deletedKeys = idx.DeletedIds.ToNativeArray(Allocator.Temp);
-            w.Write(deletedKeys.Length);
-            for (int i = 0; i < deletedKeys.Length; i++)
-                w.Write(deletedKeys[i]);
-            deletedKeys.Dispose();
+            try
+            {
+                w.Write(deletedKeys.Length);
+                for (int i = 0; i < deletedKeys.Length; i++)
+                    w.Write(deletedKeys[i]);
+            }
+            finally { deletedKeys.Dispose(); }
         }
 
         static void WriteBm25Index(BinaryWriter w, UniCortexDatabase db)
@@ -287,44 +307,100 @@ namespace UniCortex.Persistence
 
             // 転置インデックス
             var termKeys = idx.InvertedIndex.GetKeyArray(Allocator.Temp);
-            w.Write(termKeys.Length);
-            for (int k = 0; k < termKeys.Length; k++)
+            try
             {
-                uint termHash = termKeys[k];
-                var postings = new NativeList<BM25Posting>(16, Allocator.Temp);
-                if (idx.InvertedIndex.TryGetFirstValue(termHash, out BM25Posting posting, out var iter))
+                w.Write(termKeys.Length);
+                for (int k = 0; k < termKeys.Length; k++)
                 {
-                    do { postings.Add(posting); }
-                    while (idx.InvertedIndex.TryGetNextValue(out posting, ref iter));
-                }
+                    uint termHash = termKeys[k];
+                    var postings = new NativeList<BM25Posting>(16, Allocator.Temp);
+                    try
+                    {
+                        if (idx.InvertedIndex.TryGetFirstValue(termHash, out BM25Posting posting, out var iter))
+                        {
+                            do { postings.Add(posting); }
+                            while (idx.InvertedIndex.TryGetNextValue(out posting, ref iter));
+                        }
 
-                w.Write(termHash);
-                w.Write(postings.Length);
-                for (int p = 0; p < postings.Length; p++)
-                {
-                    w.Write(postings[p].InternalId);
-                    w.Write(postings[p].TermFrequency);
+                        w.Write(termHash);
+                        w.Write(postings.Length);
+                        for (int p = 0; p < postings.Length; p++)
+                        {
+                            w.Write(postings[p].InternalId);
+                            w.Write(postings[p].TermFrequency);
+                        }
+                    }
+                    finally { postings.Dispose(); }
                 }
-                postings.Dispose();
             }
-            termKeys.Dispose();
+            finally { termKeys.Dispose(); }
 
             // DocumentFrequency
             var dfKeys = idx.DocumentFrequency.GetKeyArray(Allocator.Temp);
-            w.Write(dfKeys.Length);
-            for (int k = 0; k < dfKeys.Length; k++)
+            try
             {
-                w.Write(dfKeys[k]);
-                w.Write(idx.DocumentFrequency[dfKeys[k]]);
+                w.Write(dfKeys.Length);
+                for (int k = 0; k < dfKeys.Length; k++)
+                {
+                    w.Write(dfKeys[k]);
+                    w.Write(idx.DocumentFrequency[dfKeys[k]]);
+                }
             }
-            dfKeys.Dispose();
+            finally { dfKeys.Dispose(); }
 
             // DeletedIds
             var deletedKeys = idx.DeletedIds.ToNativeArray(Allocator.Temp);
-            w.Write(deletedKeys.Length);
-            for (int i = 0; i < deletedKeys.Length; i++)
-                w.Write(deletedKeys[i]);
-            deletedKeys.Dispose();
+            try
+            {
+                w.Write(deletedKeys.Length);
+                for (int i = 0; i < deletedKeys.Length; i++)
+                    w.Write(deletedKeys[i]);
+            }
+            finally { deletedKeys.Dispose(); }
+        }
+
+        static void WriteMetadata(BinaryWriter w, UniCortexDatabase db)
+        {
+            var meta = db.GetMetadataStorage();
+
+            // Int values
+            var intKeys = meta.IntValues.GetKeyArray(Allocator.Temp);
+            try
+            {
+                w.Write(intKeys.Length);
+                for (int i = 0; i < intKeys.Length; i++)
+                {
+                    w.Write(intKeys[i]);
+                    w.Write(meta.IntValues[intKeys[i]]);
+                }
+            }
+            finally { intKeys.Dispose(); }
+
+            // Float values
+            var floatKeys = meta.FloatValues.GetKeyArray(Allocator.Temp);
+            try
+            {
+                w.Write(floatKeys.Length);
+                for (int i = 0; i < floatKeys.Length; i++)
+                {
+                    w.Write(floatKeys[i]);
+                    w.Write(meta.FloatValues[floatKeys[i]]);
+                }
+            }
+            finally { floatKeys.Dispose(); }
+
+            // Bool values
+            var boolKeys = meta.BoolValues.GetKeyArray(Allocator.Temp);
+            try
+            {
+                w.Write(boolKeys.Length);
+                for (int i = 0; i < boolKeys.Length; i++)
+                {
+                    w.Write(boolKeys[i]);
+                    w.Write(meta.BoolValues[boolKeys[i]]);
+                }
+            }
+            finally { boolKeys.Dispose(); }
         }
 
         static void WriteIdMap(BinaryWriter w, UniCortexDatabase db)
@@ -493,6 +569,38 @@ namespace UniCortex.Persistence
             int freeCount = r.ReadInt32();
             for (int i = 0; i < freeCount; i++)
                 idMap.FreeList.Add(r.ReadInt32());
+        }
+
+        static void ReadMetadata(BinaryReader r, UniCortexDatabase db)
+        {
+            ref var meta = ref db.GetMetadataStorageRef();
+
+            // Int values
+            int intCount = r.ReadInt32();
+            for (int i = 0; i < intCount; i++)
+            {
+                long key = r.ReadInt64();
+                int value = r.ReadInt32();
+                meta.IntValues.Add(key, value);
+            }
+
+            // Float values
+            int floatCount = r.ReadInt32();
+            for (int i = 0; i < floatCount; i++)
+            {
+                long key = r.ReadInt64();
+                float value = r.ReadSingle();
+                meta.FloatValues.Add(key, value);
+            }
+
+            // Bool values
+            int boolCount = r.ReadInt32();
+            for (int i = 0; i < boolCount; i++)
+            {
+                long key = r.ReadInt64();
+                bool value = r.ReadBoolean();
+                meta.BoolValues.Add(key, value);
+            }
         }
     }
 }

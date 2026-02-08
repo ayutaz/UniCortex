@@ -54,11 +54,17 @@ namespace UniCortex.Persistence
         /// <summary>IdMap セクションのサイズ。</summary>
         public long IdMapSize;
 
+        /// <summary>MetadataStorage セクションのオフセット。</summary>
+        public long MetadataOffset;
+
+        /// <summary>MetadataStorage セクションのサイズ。</summary>
+        public long MetadataSize;
+
         /// <summary>CRC32 チェックサム。</summary>
         public uint Checksum;
 
-        /// <summary>パディング (128 bytes に合わせる)。</summary>
-        public unsafe fixed byte Reserved[128 - 4 - 2 - 2 - 4 - 4 - 6 * 16 - 4];
+        /// <summary>パディング (144 bytes に合わせる)。</summary>
+        public unsafe fixed byte Reserved[144 - 4 - 2 - 2 - 4 - 4 - 7 * 16 - 4];
 
         /// <summary>マジックナンバー定数。</summary>
         public const uint ExpectedMagic = 0x554E4358;
@@ -67,9 +73,9 @@ namespace UniCortex.Persistence
         public const ushort CurrentVersionMajor = 1;
 
         /// <summary>現在のマイナーバージョン。</summary>
-        public const ushort CurrentVersionMinor = 0;
+        public const ushort CurrentVersionMinor = 1;
 
         /// <summary>ヘッダサイズ。</summary>
-        public const int HeaderSize = 128;
+        public const int HeaderSize = 144;
     }
 }

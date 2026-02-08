@@ -114,7 +114,7 @@ int internalId = result.Value;
 
 - `SearchResult` は内部 ID とスコアのペア。`IComparable<SearchResult>` を実装し、ヒープやソートで直接利用可能
 - `SearchParams` は検索パラメータを集約する。Dense 固有の `EfSearch` も含むが、他の検索方式では無視される
-- `DistanceType` で距離関数の種別を指定する。データ登録時ではなく検索時に選択可能とし、同一データに対して異なる距離関数での検索を許容する
+- `DistanceType` で距離関数の種別を指定する。`DatabaseConfig.DistanceType` で HNSW グラフ構築時の距離関数を決定し、`SearchParams.DistanceType` で検索時の距離関数を指定する。グラフ構築と検索で同一の距離関数を使用することを推奨する
 
 ### 定義
 
@@ -852,6 +852,7 @@ public class UniCortexDatabase : IDisposable
     /// <summary>
     /// インデックスを構築する。
     /// Add でデータを投入した後、検索前に呼び出す必要がある。
+    /// Build() 未実行の状態で Search を呼ぶと空結果または IndexNotBuilt エラーを返す。
     /// </summary>
     public void Build();
 

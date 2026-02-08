@@ -68,6 +68,7 @@ namespace UniCortex.Tests.Editor.Persistence
             db.Add(1, denseVector: vec1);
             db.Add(2, denseVector: vec2);
             db.Add(3, denseVector: vec3);
+            db.Build();
 
             var saveResult = IndexSerializer.Save(testFilePath, db);
             Assert.IsTrue(saveResult.IsSuccess);
@@ -101,6 +102,7 @@ namespace UniCortex.Tests.Editor.Persistence
             var text2 = MakeText("ice staff magic");
             db.Add(1, text: text1);
             db.Add(2, text: text2);
+            db.Build();
 
             var saveResult = IndexSerializer.Save(testFilePath, db);
             Assert.IsTrue(saveResult.IsSuccess);
@@ -128,6 +130,7 @@ namespace UniCortex.Tests.Editor.Persistence
             var sv2 = MakeSparse((1, 1.0f), (2, 0.5f));
             db.Add(1, sparseVector: sv1);
             db.Add(2, sparseVector: sv2);
+            db.Build();
 
             var saveResult = IndexSerializer.Save(testFilePath, db);
             Assert.IsTrue(saveResult.IsSuccess);
@@ -187,6 +190,7 @@ namespace UniCortex.Tests.Editor.Persistence
             var db = new UniCortexDatabase(config);
             var vec = MakeVector(1, 0, 0, 0);
             db.Add(1, denseVector: vec);
+            db.Build();
             IndexSerializer.Save(testFilePath, db);
             db.Dispose();
             vec.Dispose();

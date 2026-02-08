@@ -22,7 +22,7 @@ UniCortex の永続化レイヤーは、インデックスデータをディス�
 ```csharp
 /// <summary>
 /// UniCortex インデックスファイルのヘッダ。
-/// 固定長 128 bytes。先頭にマジックナンバーとバージョンを持ち、
+/// 固定長 144 bytes。先頭にマジックナンバーとバージョンを持ち、
 /// 各セクションの位置とサイズを記録する。
 /// </summary>
 public struct FileHeader
@@ -34,7 +34,7 @@ public struct FileHeader
     public ushort VersionMajor;    // 1
 
     /// <summary>マイナーバージョン。後方互換ありの変更時にインクリメント。</summary>
-    public ushort VersionMinor;    // 0
+    public ushort VersionMinor;    // 1
 
     /// <summary>ベクトル次元数。</summary>
     public int Dimension;
@@ -66,17 +66,17 @@ public struct FileHeader
     /// <summary>BM25 インデックスセクションのサイズ (bytes)。</summary>
     public long Bm25IndexSize;
 
-    /// <summary>Metadata セクションのファイル先頭からのオフセット (bytes)。</summary>
-    public long MetadataOffset;
-
-    /// <summary>Metadata セクションのサイズ (bytes)。</summary>
-    public long MetadataSize;
-
     /// <summary>IdMap セクションのファイル先頭からのオフセット (bytes)。</summary>
     public long IdMapOffset;
 
     /// <summary>IdMap セクションのサイズ (bytes)。</summary>
     public long IdMapSize;
+
+    /// <summary>MetadataStorage セクションのファイル先頭からのオフセット (bytes)。</summary>
+    public long MetadataOffset;
+
+    /// <summary>MetadataStorage セクションのサイズ (bytes)。</summary>
+    public long MetadataSize;
 
     /// <summary>ヘッダ以降の全データに対する CRC32 チェックサム。</summary>
     public uint Checksum;          // CRC32
@@ -92,7 +92,7 @@ public struct FileHeader
 | `*Offset` / `*Size` | `long` | 各セクションの位置。64-bit で大規模ファイルにも対応 |
 | `Checksum` | `uint` | CRC32 によるデータ破損検出 |
 
-ヘッダは 128 bytes に固定する。将来のフィールド追加に備えて末尾にパディングを確保する。
+ヘッダは 144 bytes に固定する。将来のフィールド追加に備えて末尾にパディングを確保する。
 
 ### バイナリヘッダのバイト列例（テストフィクスチャ用）
 
@@ -104,15 +104,15 @@ Offset  Field               Hex bytes (little-endian)      Value
 ------  ------------------  ----------------------------   -----
 0x00    MagicNumber         58 43 4E 55                    0x554E4358 ("UNCX")
 0x04    VersionMajor        01 00                          1
-0x06    VersionMinor        00 00                          0
+0x06    VersionMinor        01 00                          1
 0x08    Dimension           04 00 00 00                    4
 0x0C    DocumentCount       03 00 00 00                    3
-0x10    VectorDataOffset    80 00 00 00 00 00 00 00        128 (= sizeof(FileHeader))
+0x10    VectorDataOffset    90 00 00 00 00 00 00 00        144 (= sizeof(FileHeader))
 0x18    VectorDataSize      30 00 00 00 00 00 00 00        48 (= 3 * 4 * sizeof(float))
-0x20    HnswGraphOffset     B0 00 00 00 00 00 00 00        176 (= 128 + 48)
+0x20    HnswGraphOffset     C0 00 00 00 00 00 00 00        192 (= 144 + 48)
 0x28    HnswGraphSize       xx xx xx xx xx xx xx xx        (可変)
 ...     (以下同様に各セクション)
-0x7C    Checksum            xx xx xx xx                    CRC32 (ヘッダ以降の全データ)
+0x88    Checksum            xx xx xx xx                    CRC32 (ヘッダ以降の全データ)
 ```
 
 テスト検証に使用する具体的なアサーション:
@@ -144,7 +144,7 @@ Offset  Field               Hex bytes (little-endian)      Value
 
 ```
 ┌──────────────────────────────────┐
-│  FileHeader (128 bytes)          │  固定長ヘッダ
+│  FileHeader (144 bytes)          │  固定長ヘッダ
 ├──────────────────────────────────┤
 │  VectorData Section              │  SoA flat array の生バイト列
 ├──────────────────────────────────┤
@@ -547,7 +547,7 @@ Burst Job 内では具体型 (`MmapPersistence`, `WebGlPersistence`) を直接�
 ```
 1. FileHeader を構築
    ├── MagicNumber = 0x554E4358
-   ├── VersionMajor = 1, VersionMinor = 0
+   ├── VersionMajor = 1, VersionMinor = 1
    ├── Dimension, DocumentCount を設定
    └── 各セクションの Offset / Size は後述のステップで計算
 
@@ -560,7 +560,7 @@ Burst Job 内では具体型 (`MmapPersistence`, `WebGlPersistence`) を直接�
    └── IdMap → 外部↔内部 ID マッピング
 
 3. 各セクションの Offset / Size を計算
-   ├── VectorDataOffset = sizeof(FileHeader) = 128
+   ├── VectorDataOffset = sizeof(FileHeader) = 144
    ├── HnswGraphOffset = VectorDataOffset + VectorDataSize
    ├── SparseIndexOffset = HnswGraphOffset + HnswGraphSize
    ├── ... (以下同様に連続配置)
@@ -583,7 +583,7 @@ Burst Job 内では具体型 (`MmapPersistence`, `WebGlPersistence`) を直接�
 ### 7.2 Load フロー
 
 ```
-1. FileHeader を読み取り (先頭 128 bytes)
+1. FileHeader を読み取り (先頭 144 bytes)
 
 2. マジックナンバーを検証
    └── MagicNumber != 0x554E4358 → エラー (InvalidFileFormat)
@@ -714,7 +714,7 @@ Result<FileHeader> ValidateHeader(FileHeader header)
 
 | セクション | 計算式 | 概算サイズ |
 |---|---|---|
-| FileHeader | 固定 | 128 bytes |
+| FileHeader | 固定 | 144 bytes |
 | VectorData | 128 * 50,000 * 4 | 25.6 MB |
 | HnswGraph | 50,000 * (16 + 64 * 4) ※M=16 想定 | ~14.4 MB |
 | SparseIndex | 5,000,000 * 8 + overhead | ~45 MB |

@@ -65,11 +65,8 @@ namespace UniCortex.Hybrid
                 else
                 {
                     denseResults = new NativeArray<SearchResult>(0, Allocator.TempJob);
-                    // 空グラフの場合は失敗ではなく結果0件として扱う
-                    if (hnswGraph.Count > 0)
-                        denseOk = false;
-                    else
-                        denseOk = false;
+                    // 空グラフの場合は結果0件として許容、データがあるのに0件なら失敗
+                    denseOk = (hnswGraph.Count == 0);
                 }
             }
 

@@ -140,6 +140,7 @@ namespace UniCortex.Tests.Editor.Security
             var db = new UniCortexDatabase(config);
             var vec = MakeVector(1, 0, 0, 0);
             db.Add(1, denseVector: vec);
+            db.Build();
 
             var query = MakeVector(1, 0, 0, 0);
             var results = db.SearchDense(query, new SearchParams { K = 0, EfSearch = 50 });

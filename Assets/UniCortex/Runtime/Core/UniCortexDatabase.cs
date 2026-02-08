@@ -91,7 +91,7 @@ namespace UniCortex
                 // HNSW グラフに挿入
                 var insertResult = HnswBuilder.Insert(
                     ref hnswGraph, ref vectorStorage, internalId, denseVector,
-                    config.HnswConfig, DistanceType.EuclideanSq, ref rng);
+                    config.HnswConfig, config.DistanceType, ref rng);
                 if (!insertResult.IsSuccess)
                 {
                     idMap.Remove(id);
@@ -100,17 +100,22 @@ namespace UniCortex
             }
 
             // Sparse ベクトル
+            bool hasDense = denseVector.IsCreated && denseVector.Length > 0 && config.Dimension > 0;
             if (sparseVector.IsCreated && sparseVector.Length > 0)
             {
                 var sparseResult = sparseIndex.Add(internalId, sparseVector);
                 if (!sparseResult.IsSuccess)
                 {
+                    // ロールバック: Dense + HNSW
+                    if (hasDense)
+                        HnswSearcher.Delete(ref hnswGraph, internalId);
                     idMap.Remove(id);
                     return Result<int>.Fail(sparseResult.Error);
                 }
             }
 
             // BM25 テキスト
+            bool hasSparse = sparseVector.IsCreated && sparseVector.Length > 0;
             if (text.IsCreated && text.Length > 0)
             {
                 var tokenHashes = Tokenizer.Tokenize(text, Allocator.Temp);
@@ -120,6 +125,11 @@ namespace UniCortex
                     tokenHashes.Dispose();
                     if (!bm25Result.IsSuccess)
                     {
+                        // ロールバック: Dense + HNSW + Sparse
+                        if (hasSparse)
+                            sparseIndex.Remove(internalId);
+                        if (hasDense)
+                            HnswSearcher.Delete(ref hnswGraph, internalId);
                         idMap.Remove(id);
                         return Result<int>.Fail(bm25Result.Error);
                     }
@@ -224,7 +234,7 @@ namespace UniCortex
         /// </summary>
         public NativeArray<SearchResult> SearchDense(NativeArray<float> query, SearchParams param)
         {
-            if (isDisposed || config.Dimension <= 0)
+            if (isDisposed || config.Dimension <= 0 || !isBuilt)
                 return new NativeArray<SearchResult>(0, Allocator.TempJob);
 
             int efSearch = param.EfSearch > 0 ? param.EfSearch : 50;
@@ -238,7 +248,7 @@ namespace UniCortex
         /// </summary>
         public NativeArray<SearchResult> SearchSparse(NativeArray<SparseElement> query, int k)
         {
-            if (isDisposed)
+            if (isDisposed || !isBuilt)
                 return new NativeArray<SearchResult>(0, Allocator.TempJob);
 
             return SparseSearcher.Search(ref sparseIndex, query, k, Allocator.TempJob);
@@ -249,7 +259,7 @@ namespace UniCortex
         /// </summary>
         public NativeArray<SearchResult> SearchBM25(NativeArray<byte> queryText, int k)
         {
-            if (isDisposed)
+            if (isDisposed || !isBuilt)
                 return new NativeArray<SearchResult>(0, Allocator.TempJob);
 
             var tokenHashes = Tokenizer.Tokenize(queryText, Allocator.Temp);
@@ -271,8 +281,8 @@ namespace UniCortex
         /// </summary>
         public Result<NativeArray<SearchResult>> SearchHybrid(HybridSearchParams param)
         {
-            if (isDisposed)
-                return Result<NativeArray<SearchResult>>.Fail(ErrorCode.InvalidParameter);
+            if (isDisposed || !isBuilt)
+                return Result<NativeArray<SearchResult>>.Fail(ErrorCode.IndexNotBuilt);
 
             return HybridSearcher.Execute(
                 ref hnswGraph, ref vectorStorage,
@@ -319,6 +329,39 @@ namespace UniCortex
         }
 
         /// <summary>
+        /// メタデータ (int) を取得する。
+        /// </summary>
+        public Result<int> GetMetadataInt(ulong docId, int fieldHash)
+        {
+            var idResult = idMap.GetInternal(docId);
+            if (!idResult.IsSuccess)
+                return Result<int>.Fail(ErrorCode.NotFound);
+            return metadataStorage.GetInt(fieldHash, idResult.Value);
+        }
+
+        /// <summary>
+        /// メタデータ (float) を取得する。
+        /// </summary>
+        public Result<float> GetMetadataFloat(ulong docId, int fieldHash)
+        {
+            var idResult = idMap.GetInternal(docId);
+            if (!idResult.IsSuccess)
+                return Result<float>.Fail(ErrorCode.NotFound);
+            return metadataStorage.GetFloat(fieldHash, idResult.Value);
+        }
+
+        /// <summary>
+        /// メタデータ (bool) を取得する。
+        /// </summary>
+        public Result<bool> GetMetadataBool(ulong docId, int fieldHash)
+        {
+            var idResult = idMap.GetInternal(docId);
+            if (!idResult.IsSuccess)
+                return Result<bool>.Fail(ErrorCode.NotFound);
+            return metadataStorage.GetBool(fieldHash, idResult.Value);
+        }
+
+        /// <summary>
         /// メタデータ (bool) を設定する。
         /// </summary>
         public Result<bool> SetMetadataBool(ulong docId, int fieldHash, bool value)
@@ -336,6 +379,9 @@ namespace UniCortex
         {
             isBuilt = true;
         }
+
+        /// <summary>isBuilt フラグを設定する (復元用)。</summary>
+        internal void SetBuilt(bool value) { isBuilt = value; }
 
         // --- 永続化用内部アクセッサ (IndexSerializer から使用) ---
 
@@ -359,6 +405,12 @@ namespace UniCortex
 
         /// <summary>内部 BM25Index の参照を返す (復元用)。</summary>
         internal ref BM25Index GetBm25IndexRef() => ref bm25Index;
+
+        /// <summary>内部 MetadataStorage を返す。</summary>
+        internal MetadataStorage GetMetadataStorage() => metadataStorage;
+
+        /// <summary>内部 MetadataStorage の参照を返す (復元用)。</summary>
+        internal ref MetadataStorage GetMetadataStorageRef() => ref metadataStorage;
 
         /// <summary>内部 IdMap を返す。</summary>
         internal IdMap GetIdMap() => idMap;

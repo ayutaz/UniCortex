@@ -170,6 +170,15 @@ namespace UniCortex
             return boolValues.TryGetValue(key, out value);
         }
 
+        /// <summary>内部 int 値マップ (シリアライズ用)。</summary>
+        internal NativeParallelHashMap<long, int> IntValues => intValues;
+
+        /// <summary>内部 float 値マップ (シリアライズ用)。</summary>
+        internal NativeParallelHashMap<long, float> FloatValues => floatValues;
+
+        /// <summary>内部 bool 値マップ (シリアライズ用)。</summary>
+        internal NativeParallelHashMap<long, bool> BoolValues => boolValues;
+
         public void Dispose()
         {
             if (intValues.IsCreated) intValues.Dispose();

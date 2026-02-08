@@ -16,6 +16,9 @@ namespace UniCortex
         /// <summary>HNSW パラメータ。</summary>
         public HnswConfig HnswConfig;
 
+        /// <summary>Dense ベクトルの距離関数。</summary>
+        public DistanceType DistanceType;
+
         /// <summary>BM25 パラメータ k1。</summary>
         public float BM25K1;
 
@@ -28,6 +31,7 @@ namespace UniCortex
             Capacity = 10000,
             Dimension = 128,
             HnswConfig = HnswConfig.Default,
+            DistanceType = DistanceType.EuclideanSq,
             BM25K1 = 1.2f,
             BM25B = 0.75f,
         };

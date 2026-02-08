@@ -16,11 +16,8 @@ namespace UniCortex.Hnsw
         public int EfSearch;
         public DistanceType Distance;
 
-        [NativeDisableParallelForRestriction]
         public NativeArray<HnswNodeMeta> Nodes;
-        [NativeDisableParallelForRestriction]
         public NativeArray<int> Neighbors;
-        [NativeDisableParallelForRestriction]
         public NativeArray<int> NeighborCounts;
         [ReadOnly] public NativeArray<bool> Deleted;
 
@@ -36,7 +33,6 @@ namespace UniCortex.Hnsw
         public int DeletedCount;
 
         /// <summary>出力結果数。</summary>
-        [NativeDisableParallelForRestriction]
         public NativeArray<int> ResultCount;
 
         public void Execute()
