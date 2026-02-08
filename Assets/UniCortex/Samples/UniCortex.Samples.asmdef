@@ -3,7 +3,8 @@
     "rootNamespace": "UniCortex.Samples",
     "references": [
         "UniCortex.Runtime",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

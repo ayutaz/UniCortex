@@ -206,7 +206,7 @@ if (loadResult.IsSuccess)
 
 各デモは RPG アイテムデータベース (20件) を使用し、コード生成 UGUI でプレハブ不要です。
 
-> **Note**: サンプルシーンには `com.unity.ugui` パッケージ (2.0.0+) が必要です。`Packages/manifest.json` に含まれていない場合は追加してください。
+> **Note**: サンプルシーンには `com.unity.ugui` (2.0.0+) および `com.unity.inputsystem` (1.14.0+) パッケージが必要です。`Packages/manifest.json` に含まれていない場合は追加してください。
 
 ## 距離関数
 
@@ -365,7 +365,7 @@ Six interactive demo scenes are included. Import them from the Samples tab in Pa
 
 Each demo uses an RPG item database (20 items) with code-generated UGUI (no prefab dependencies).
 
-> **Note**: Sample scenes require the `com.unity.ugui` package (2.0.0+). Add it to your `Packages/manifest.json` if not already included.
+> **Note**: Sample scenes require the `com.unity.ugui` (2.0.0+) and `com.unity.inputsystem` (1.14.0+) packages. Add them to your `Packages/manifest.json` if not already included.
 
 ### Distance Functions
 
