@@ -5,9 +5,9 @@
   "description": "Unity on-device unified search engine: Dense (HNSW) + Sparse + BM25 + Hybrid (RRF) with Burst/Jobs optimization.",
   "unity": "6000.0",
   "unityRelease": "0f1",
-  "documentationUrl": "https://github.com/YOUR_ORG/UniCortex",
-  "changelogUrl": "https://github.com/YOUR_ORG/UniCortex/blob/main/Assets/UniCortex/CHANGELOG.md",
-  "licensesUrl": "https://github.com/YOUR_ORG/UniCortex/blob/main/Assets/UniCortex/LICENSE.md",
+  "documentationUrl": "https://github.com/ayutaz/UniCortex",
+  "changelogUrl": "https://github.com/ayutaz/UniCortex/blob/main/Assets/UniCortex/CHANGELOG.md",
+  "licensesUrl": "https://github.com/ayutaz/UniCortex/blob/main/Assets/UniCortex/LICENSE.md",
   "license": "Apache-2.0",
   "keywords": [
     "search",

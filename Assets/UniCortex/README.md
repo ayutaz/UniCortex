@@ -27,7 +27,7 @@ Provides Dense vector search (HNSW) + Sparse vector search + BM25 full-text sear
 Add via Unity Package Manager using git URL:
 
 ```
-https://github.com/YOUR_ORG/UniCortex.git?path=Assets/UniCortex
+https://github.com/ayutaz/UniCortex.git?path=Assets/UniCortex
 ```
 
 Or add to `Packages/manifest.json`:
@@ -35,7 +35,7 @@ Or add to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.unicortex.runtime": "https://github.com/YOUR_ORG/UniCortex.git?path=Assets/UniCortex"
+    "com.unicortex.runtime": "https://github.com/ayutaz/UniCortex.git?path=Assets/UniCortex"
   }
 }
 ```
