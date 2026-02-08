@@ -2,6 +2,8 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Collections;
+using UniCortex;
+using UniCortex.Hnsw;
 using UniCortex.Persistence;
 
 namespace UniCortex.Samples

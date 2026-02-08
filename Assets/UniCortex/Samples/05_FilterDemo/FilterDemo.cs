@@ -3,6 +3,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Collections;
+using UniCortex;
 
 namespace UniCortex.Samples
 {

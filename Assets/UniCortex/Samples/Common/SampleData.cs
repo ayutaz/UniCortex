@@ -1,5 +1,7 @@
 using System.Text;
 using Unity.Collections;
+using UniCortex;
+using UniCortex.Hnsw;
 using UniCortex.Sparse;
 
 namespace UniCortex.Samples

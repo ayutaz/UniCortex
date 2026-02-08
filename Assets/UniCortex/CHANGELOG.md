@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Interactive parameter controls with real-time search
 - UPM samples entry in package.json
 
+### Fixed
+- Sample scenes compile errors: added `com.unity.ugui` package dependency and `UnityEngine.UI` assembly reference
+- Missing `using UniCortex;` / `using UniCortex.Hnsw;` directives in sample scripts
+
 ## [0.1.0] - 2025-01-01
 
 ### Added
