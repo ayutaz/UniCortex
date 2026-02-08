@@ -29,7 +29,7 @@ namespace UniCortex.Sparse
         public void Execute()
         {
             // スコア累積
-            var scores = new NativeParallelHashMap<int, float>(128, Allocator.Temp);
+            var scores = new NativeParallelHashMap<int, float>(128, Allocator.TempJob);
 
             for (int qi = 0; qi < Query.Length; qi++)
             {
@@ -59,7 +59,7 @@ namespace UniCortex.Sparse
             }
 
             // Top-K 選択
-            var heap = new NativeMaxHeap(K, Allocator.Temp);
+            var heap = new NativeMaxHeap(K, Allocator.TempJob);
             var enumerator = scores.GetEnumerator();
             while (enumerator.MoveNext())
             {

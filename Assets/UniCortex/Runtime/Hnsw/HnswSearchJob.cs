@@ -71,7 +71,7 @@ namespace UniCortex.Hnsw
             };
 
             var searchResults = HnswSearcher.Search(
-                ref graph, ref storage, Query, K, EfSearch, Distance, Allocator.Temp);
+                ref graph, ref storage, Query, K, EfSearch, Distance, Allocator.TempJob);
 
             int count = searchResults.Length < Results.Length ? searchResults.Length : Results.Length;
             for (int i = 0; i < count; i++)

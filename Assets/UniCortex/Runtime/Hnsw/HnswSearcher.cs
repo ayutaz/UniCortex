@@ -158,9 +158,9 @@ namespace UniCortex.Hnsw
             int layer,
             DistanceType distanceType)
         {
-            var visited = new NativeParallelHashSet<int>(ef * 4, Allocator.Temp);
-            var candidateHeap = new NativeMinHeap(ef * 2, Allocator.Temp);
-            var resultHeap = new NativeMaxHeap(ef, Allocator.Temp);
+            var visited = new NativeParallelHashSet<int>(ef * 4, Allocator.TempJob);
+            var candidateHeap = new NativeMinHeap(ef * 2, Allocator.TempJob);
+            var resultHeap = new NativeMaxHeap(ef, Allocator.TempJob);
 
             var querySlice = query.Slice();
             var epVec = vectorStorage.Get(entryPoint);
@@ -201,7 +201,7 @@ namespace UniCortex.Hnsw
                 }
             }
 
-            var resultList = new NativeList<SearchResult>(resultHeap.Count, Allocator.Temp);
+            var resultList = new NativeList<SearchResult>(resultHeap.Count, Allocator.TempJob);
             while (resultHeap.Count > 0)
                 resultList.Add(resultHeap.Pop());
 

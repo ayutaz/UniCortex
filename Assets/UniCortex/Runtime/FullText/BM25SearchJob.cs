@@ -32,7 +32,7 @@ namespace UniCortex.FullText
             float avgdl = math.max(AverageDocumentLength, 1.0f);
             int n = TotalDocuments;
 
-            var scores = new NativeParallelHashMap<int, float>(128, Allocator.Temp);
+            var scores = new NativeParallelHashMap<int, float>(128, Allocator.TempJob);
 
             for (int qi = 0; qi < QueryTokenHashes.Length; qi++)
             {
@@ -70,7 +70,7 @@ namespace UniCortex.FullText
             }
 
             // Top-K
-            var heap = new NativeMaxHeap(K, Allocator.Temp);
+            var heap = new NativeMaxHeap(K, Allocator.TempJob);
             var enumerator = scores.GetEnumerator();
             while (enumerator.MoveNext())
             {

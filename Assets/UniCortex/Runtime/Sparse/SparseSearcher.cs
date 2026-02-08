@@ -23,7 +23,7 @@ namespace UniCortex.Sparse
 
             // スコア累積用 HashMap
             var scores = new NativeParallelHashMap<int, float>(
-                index.DocumentCount > 0 ? index.DocumentCount : 64, Allocator.Temp);
+                index.DocumentCount > 0 ? index.DocumentCount : 64, Allocator.TempJob);
 
             // DAAT: クエリの各非ゼロ次元について転置インデックスを走査
             for (int qi = 0; qi < query.Length; qi++)
@@ -56,7 +56,7 @@ namespace UniCortex.Sparse
             }
 
             // Top-K 選択 (NativeMaxHeap で最悪候補を Pop)
-            var heap = new NativeMaxHeap(k, Allocator.Temp);
+            var heap = new NativeMaxHeap(k, Allocator.TempJob);
             var enumerator = scores.GetEnumerator();
             while (enumerator.MoveNext())
             {

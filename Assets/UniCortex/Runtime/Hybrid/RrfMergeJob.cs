@@ -39,7 +39,7 @@ namespace UniCortex.Hybrid
             }
 
             var scoreMap = new NativeParallelHashMap<int, float>(
-                math.max(totalEstimate, 4), Allocator.Temp);
+                math.max(totalEstimate, 4), Allocator.TempJob);
 
             // Dense 結果を走査
             AccumulateScores(ref scoreMap, DenseResults, DenseCount, Config.DenseWeight, Config.RankConstant);
@@ -53,7 +53,7 @@ namespace UniCortex.Hybrid
             // Top-K 選択 (RRF スコアが大きいほど上位 → MinHeap で下位を押し出す)
             // NativeMinHeap は Score 昇順なので、RRF スコアを負値に変換して格納する
             int heapSize = math.min(K, scoreMap.Count());
-            var heap = new NativeMinHeap(heapSize, Allocator.Temp);
+            var heap = new NativeMinHeap(heapSize, Allocator.TempJob);
 
             var enumerator = scoreMap.GetEnumerator();
             while (enumerator.MoveNext())

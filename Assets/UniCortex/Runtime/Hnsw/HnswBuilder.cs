@@ -155,9 +155,9 @@ namespace UniCortex.Hnsw
             int layer,
             DistanceType distanceType)
         {
-            var visited = new NativeParallelHashSet<int>(ef * 4, Allocator.Temp);
-            var candidates = new NativeMinHeap(ef * 2, Allocator.Temp);
-            var results = new NativeMaxHeap(ef, Allocator.Temp);
+            var visited = new NativeParallelHashSet<int>(ef * 4, Allocator.TempJob);
+            var candidates = new NativeMinHeap(ef * 2, Allocator.TempJob);
+            var results = new NativeMaxHeap(ef, Allocator.TempJob);
 
             var querySlice = query.Slice();
             var epVec = vectorStorage.Get(entryPoint);
@@ -202,7 +202,7 @@ namespace UniCortex.Hnsw
             }
 
             // 結果リストに変換
-            var resultList = new NativeList<SearchResult>(results.Count, Allocator.Temp);
+            var resultList = new NativeList<SearchResult>(results.Count, Allocator.TempJob);
             while (results.Count > 0)
             {
                 resultList.Add(results.Pop());
@@ -231,7 +231,7 @@ namespace UniCortex.Hnsw
             int count = graph.GetNeighborCount(nodeId, layer);
 
             var nodeVec = vectorStorage.Get(nodeId);
-            var candidates = new NativeList<SearchResult>(count + 1, Allocator.Temp);
+            var candidates = new NativeList<SearchResult>(count + 1, Allocator.TempJob);
 
             // 既存の隣接ノード
             for (int i = 0; i < count; i++)
@@ -252,7 +252,7 @@ namespace UniCortex.Hnsw
             candidates.Sort();
 
             // 上位 maxConn を保持
-            var newNeighbors = new NativeList<int>(maxConn, Allocator.Temp);
+            var newNeighbors = new NativeList<int>(maxConn, Allocator.TempJob);
             for (int i = 0; i < candidates.Length && newNeighbors.Length < maxConn; i++)
             {
                 newNeighbors.Add(candidates[i].InternalId);

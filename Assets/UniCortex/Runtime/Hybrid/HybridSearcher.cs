@@ -54,7 +54,7 @@ namespace UniCortex.Hybrid
                 int efSearch = param.DenseParams.EfSearch > 0 ? param.DenseParams.EfSearch : 50;
                 var denseResult = HnswSearcher.Search(
                     ref hnswGraph, ref vectorStorage, param.DenseQuery,
-                    subK, efSearch, param.DenseParams.DistanceType, Allocator.Temp);
+                    subK, efSearch, param.DenseParams.DistanceType, Allocator.TempJob);
 
                 if (denseResult.Length > 0)
                 {
@@ -64,7 +64,7 @@ namespace UniCortex.Hybrid
                 }
                 else
                 {
-                    denseResults = new NativeArray<SearchResult>(0, Allocator.Temp);
+                    denseResults = new NativeArray<SearchResult>(0, Allocator.TempJob);
                     // 空グラフの場合は失敗ではなく結果0件として扱う
                     if (hnswGraph.Count > 0)
                         denseOk = false;
@@ -76,7 +76,7 @@ namespace UniCortex.Hybrid
             // Sparse 検索
             if (hasSparse)
             {
-                var sparseResult = SparseSearcher.Search(ref sparseIndex, param.SparseQuery, subK, Allocator.Temp);
+                var sparseResult = SparseSearcher.Search(ref sparseIndex, param.SparseQuery, subK, Allocator.TempJob);
                 if (sparseResult.Length > 0)
                 {
                     sparseResults = sparseResult;
@@ -85,7 +85,7 @@ namespace UniCortex.Hybrid
                 }
                 else
                 {
-                    sparseResults = new NativeArray<SearchResult>(0, Allocator.Temp);
+                    sparseResults = new NativeArray<SearchResult>(0, Allocator.TempJob);
                 }
             }
 
@@ -93,12 +93,12 @@ namespace UniCortex.Hybrid
             if (hasBm25)
             {
                 // テキストをトークナイズしてハッシュ列に変換
-                var tokenHashes = Tokenizer.Tokenize(param.TextQuery, Allocator.Temp);
+                var tokenHashes = Tokenizer.Tokenize(param.TextQuery, Allocator.TempJob);
                 if (tokenHashes.Length > 0)
                 {
                     var bm25Result = BM25Searcher.Search(
                         ref bm25Index, tokenHashes, subK,
-                        BM25Searcher.DefaultK1, BM25Searcher.DefaultB, Allocator.Temp);
+                        BM25Searcher.DefaultK1, BM25Searcher.DefaultB, Allocator.TempJob);
                     if (bm25Result.Length > 0)
                     {
                         bm25Results = bm25Result;
@@ -107,12 +107,12 @@ namespace UniCortex.Hybrid
                     }
                     else
                     {
-                        bm25Results = new NativeArray<SearchResult>(0, Allocator.Temp);
+                        bm25Results = new NativeArray<SearchResult>(0, Allocator.TempJob);
                     }
                 }
                 else
                 {
-                    bm25Results = new NativeArray<SearchResult>(0, Allocator.Temp);
+                    bm25Results = new NativeArray<SearchResult>(0, Allocator.TempJob);
                 }
                 tokenHashes.Dispose();
             }
@@ -129,15 +129,15 @@ namespace UniCortex.Hybrid
 
             // RRF マージ
             int actualK = math.min(param.K, denseCount + sparseCount + bm25Count);
-            var mergedResults = new NativeArray<SearchResult>(actualK, Allocator.Temp);
+            var mergedResults = new NativeArray<SearchResult>(actualK, Allocator.TempJob);
 
             // 入力配列が未作成の場合は空配列を作成
             if (!denseResults.IsCreated)
-                denseResults = new NativeArray<SearchResult>(0, Allocator.Temp);
+                denseResults = new NativeArray<SearchResult>(0, Allocator.TempJob);
             if (!sparseResults.IsCreated)
-                sparseResults = new NativeArray<SearchResult>(0, Allocator.Temp);
+                sparseResults = new NativeArray<SearchResult>(0, Allocator.TempJob);
             if (!bm25Results.IsCreated)
-                bm25Results = new NativeArray<SearchResult>(0, Allocator.Temp);
+                bm25Results = new NativeArray<SearchResult>(0, Allocator.TempJob);
 
             var mergeJob = new RrfMergeJob
             {

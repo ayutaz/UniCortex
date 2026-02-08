@@ -32,8 +32,8 @@ namespace UniCortex.FullText
             int n = index.TotalDocuments;
 
             // クエリトークンのユニーク化
-            var uniqueTokens = new NativeParallelHashSet<uint>(queryTokenHashes.Length, Allocator.Temp);
-            var queryTokenList = new NativeList<uint>(queryTokenHashes.Length, Allocator.Temp);
+            var uniqueTokens = new NativeParallelHashSet<uint>(queryTokenHashes.Length, Allocator.TempJob);
+            var queryTokenList = new NativeList<uint>(queryTokenHashes.Length, Allocator.TempJob);
             for (int i = 0; i < queryTokenHashes.Length; i++)
             {
                 if (!uniqueTokens.Contains(queryTokenHashes[i]))
@@ -45,7 +45,7 @@ namespace UniCortex.FullText
 
             // スコア累積
             var scores = new NativeParallelHashMap<int, float>(
-                index.TotalDocuments > 0 ? index.TotalDocuments : 64, Allocator.Temp);
+                index.TotalDocuments > 0 ? index.TotalDocuments : 64, Allocator.TempJob);
 
             for (int qi = 0; qi < queryTokenList.Length; qi++)
             {
@@ -88,7 +88,7 @@ namespace UniCortex.FullText
             }
 
             // Top-K 選択 (負値変換)
-            var heap = new NativeMaxHeap(k, Allocator.Temp);
+            var heap = new NativeMaxHeap(k, Allocator.TempJob);
             var enumerator = scores.GetEnumerator();
             while (enumerator.MoveNext())
             {
