@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - RPG item database (20 items) with Dense/Sparse/BM25/Metadata for all demos
   - Code-generated UGUI (no prefab dependencies)
   - Interactive parameter controls with real-time search
+  - Unity scene files (`.unity`) with Main Camera + Directional Light + Demo GameObject
 - UPM samples entry in package.json
 
 ### Fixed
