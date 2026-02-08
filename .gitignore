@@ -87,3 +87,6 @@ Packages/packages-lock.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Windows NUL device file (created by mistake)
+nul
